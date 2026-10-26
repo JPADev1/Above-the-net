@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1d45c8">
+<meta name="theme-color" content="#26242e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Above the Net">
@@ -21,28 +21,32 @@
 <style>
 /* Layout: phone app shell. Court-blue ink on a cool gym-floor ground, ball-yellow as the single accent; bottom tab bar, full-screen workout mode. */
 :root{
-  --bg:#edf1f9; --surface:#ffffff; --surface-2:#e2e8f5; --line:#cfd8eb;
-  --ink:#0e1a3d; --ink-2:#56648a; --blue:#1d45c8; --blue-soft:#dbe4ff;
-  --ball:#ffc61a; --ball-ink:#3a2a00; --band:#d9423a;
+  /* Hot Shots: charcoal jersey, mint lettering, pink numbers */
+  --bg:#f3f1f6; --surface:#ffffff; --surface-2:#ebe7f0; --line:#dcd5e4;
+  --ink:#24222c; --ink-2:#6a6475; --blue:#13806f; --blue-soft:#d8f2ec;
+  --mint:#6fd3be; --on-mint:#1d1b24; --seam:#26242e;
+  --ball:#f0a8d6; --ball-ink:#4a1238; --band:#e0457a;
   --good:#11805b; --good-soft:#d9f2e8; --warn:#a85300; --warn-soft:#fff0dc; --danger:#b42318;
   --wood:#c79a63; --wood-2:#9a7140; --hill:#9ec48a; --hill-2:#6d9a5a;
-  --limb:#43517d; --limb-far:#a7b1cd; --shorts:#0e1a3d; --pad:#ffffff; --pad-far:#dfe4f1; --shoe:#f2b705; --shoe-far:#e7cf86; --hair:#3a2a1e;
+  --limb:#4b4656; --limb-far:#b3adbd; --shorts:#26242e; --pad:#ffffff; --pad-far:#e6e1ec; --shoe:#f0a8d6; --shoe-far:#e9cde0; --hair:#3a2a1e;
   --display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
   --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --r:14px; --splash:#1d45c8;
+  --r:14px; --splash:#26242e;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0a1230; --surface:#121c43; --surface-2:#1a2655; --line:#283670;
-  --ink:#eef2ff; --ink-2:#a2acd2; --blue:#7593ff; --blue-soft:#1e2c66;
-  --ball:#ffd33d; --ball-ink:#2a1f00; --band:#ff6b61;
+  --bg:#1b1a21; --surface:#25232d; --surface-2:#2f2c39; --line:#3d3a49;
+  --ink:#f4f0f7; --ink-2:#aca5b8; --blue:#7fdcc8; --blue-soft:#21393a;
+  --mint:#7fdcc8; --on-mint:#1d1b24;
+  --ball:#f3acd9; --ball-ink:#4a1238; --band:#ff6f9c;
   --good:#3fd09a; --good-soft:#123a35; --warn:#ffab55; --warn-soft:#3a2a14; --danger:#ff7a6e;
-  --wood:#b68a55; --wood-2:#80603a; --hill:#4f7a45; --hill-2:#37582f; --splash:#13205a; --limb:#c6cfee; --limb-far:#68749f; --shorts:#e9edff; --pad:#ffffff; --pad-far:#8c97bf; --shoe:#ffd33d; --shoe-far:#9c8a4a; --hair:#d9ab6a; color-scheme:dark}}
+  --wood:#b68a55; --wood-2:#80603a; --hill:#4f7a45; --hill-2:#37582f; --splash:#1b1a21; --limb:#d6d0de; --limb-far:#6f6880; --shorts:#3a3746; --pad:#ffffff; --pad-far:#8a8399; --shoe:#f3acd9; --shoe-far:#8d6a82; --hair:#d9ab6a; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0a1230; --surface:#121c43; --surface-2:#1a2655; --line:#283670;
-  --ink:#eef2ff; --ink-2:#a2acd2; --blue:#7593ff; --blue-soft:#1e2c66;
-  --ball:#ffd33d; --ball-ink:#2a1f00; --band:#ff6b61;
+  --bg:#1b1a21; --surface:#25232d; --surface-2:#2f2c39; --line:#3d3a49;
+  --ink:#f4f0f7; --ink-2:#aca5b8; --blue:#7fdcc8; --blue-soft:#21393a;
+  --mint:#7fdcc8; --on-mint:#1d1b24;
+  --ball:#f3acd9; --ball-ink:#4a1238; --band:#ff6f9c;
   --good:#3fd09a; --good-soft:#123a35; --warn:#ffab55; --warn-soft:#3a2a14; --danger:#ff7a6e;
-  --wood:#b68a55; --wood-2:#80603a; --hill:#4f7a45; --hill-2:#37582f; --splash:#13205a; --limb:#c6cfee; --limb-far:#68749f; --shorts:#e9edff; --pad:#ffffff; --pad-far:#8c97bf; --shoe:#ffd33d; --shoe-far:#9c8a4a; --hair:#d9ab6a; color-scheme:dark}
+  --wood:#b68a55; --wood-2:#80603a; --hill:#4f7a45; --hill-2:#37582f; --splash:#1b1a21; --limb:#d6d0de; --limb-far:#6f6880; --shorts:#3a3746; --pad:#ffffff; --pad-far:#8a8399; --shoe:#f3acd9; --shoe-far:#8d6a82; --hair:#d9ab6a; color-scheme:dark}
 
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -77,7 +81,7 @@ p{margin:0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .between{justify-content:space-between}
 .btn{border:0;border-radius:12px;padding:13px 18px;font-weight:700;background:var(--surface-2);min-height:48px}
-.btn.primary{background:var(--blue);color:#fff}
+.btn.primary{background:var(--mint);color:var(--on-mint)}
 .btn.ball{background:var(--ball);color:var(--ball-ink)}
 .btn.ghost{background:transparent;border:1px solid var(--line)}
 .btn.block{width:100%}
@@ -94,13 +98,13 @@ p{margin:0}
 .bar i{display:block;height:100%;background:var(--ball);border-radius:99px;transition:width .5s}
 
 /* next session */
-.next{background:var(--blue);color:#fff;border:0}
-.next .muted{color:#fff;opacity:.8}
-.next .eyebrow{color:#fff;opacity:.75}
+.next{background:var(--mint);color:var(--on-mint);border:0}
+.next .muted{color:var(--on-mint);opacity:.75}
+.next .eyebrow{color:var(--on-mint);opacity:.7}
 .next h2{font-size:36px}
 .next .btn.ball{font-size:18px}
 .stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stat3 div{background:rgba(255,255,255,.12);border-radius:10px;padding:8px 10px}
+.stat3 div{background:rgba(255,255,255,.28);border-radius:10px;padding:8px 10px}
 .stat3 b{font-family:var(--display);font-size:24px;display:block}
 .stat3 span{font-size:12px;opacity:.85}
 
@@ -180,7 +184,7 @@ p{margin:0}
 .big{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9;color:var(--blue)}
 .daypick{display:flex;gap:6px;flex-wrap:wrap}
 .daypick button{width:44px;height:44px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:700}
-.daypick button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.daypick button[aria-pressed="true"]{background:var(--mint);border-color:var(--mint);color:var(--on-mint)}
 .badges{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .bdg{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-size:12px;font-weight:700}
 .bdg svg{width:54px;height:54px}
@@ -218,7 +222,7 @@ label.spickbtn:focus-within,label.filebtn:focus-within{outline:3px solid var(--b
   padding:env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));transition:opacity .5s ease}
 #splash.out{opacity:0;pointer-events:none}
 #splash .sbrand{font-family:var(--display);font-weight:900;font-size:clamp(56px,16vw,88px);line-height:.85;text-transform:uppercase;letter-spacing:.01em}
-#splash .sbrand span{display:block;color:var(--ball)}
+#splash .sbrand span{display:block;color:var(--mint)}
 #splash .scene{width:min(420px,100%);height:330px;position:relative;overflow:hidden;--tape:180px}
 #splash .mesh{position:absolute;left:-10px;right:-10px;top:var(--tape);bottom:0;border-top:12px solid #fff;
   background:repeating-linear-gradient(90deg,rgba(255,255,255,.38) 0 3px,transparent 3px 30px),repeating-linear-gradient(0deg,rgba(255,255,255,.38) 0 3px,transparent 3px 30px);
@@ -525,7 +529,7 @@ function bodySVG(p, ex, dbMode){
   // jersey + shorts
   const neck = pt(p.sh, p.hd, 0.2);
   s += L(p.hp, pt(p.hp, p.k2, 0.36), 15, "var(--shorts)");
-  s += L(neck, pt(p.sh, p.hp, 0.78), 21, "var(--blue)");
+  s += L(neck, pt(p.sh, p.hp, 0.78), 21, "var(--mint)");
   s += L(pt(p.sh, p.hp, 0.74), p.hp, 21, "var(--shorts)") + L(p.hp, pt(p.hp, p.k1, 0.36), 15, "var(--shorts)");
   // near leg + arm
   s += L(pt(p.hp, p.k1, 0.3), p.k1, 12, "var(--limb)") + L(p.k1, p.a1, 9, "var(--limb)") + shoe(p.a1, "var(--shoe)") + pad(p.k1, "var(--pad)");
@@ -622,7 +626,7 @@ function ballIcon(fill){
     defs += `<clipPath id="${id}w${i}"><path d="M${c} ${c} L${pts.join(" L")} Z"/></clipPath>`;
     [R, R * 0.66, R * 0.33].forEach(r => { lines += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="none" clip-path="url(#${id}w${i})"/>`; });
   });
-  return `<svg viewBox="0 0 54 54" aria-hidden="true"><defs>${defs}</defs><circle cx="${c}" cy="${c}" r="${R}" fill="${fill}"/><g clip-path="url(#${id})" stroke="var(--ink)" stroke-width="2.2">${lines}</g><circle cx="${c}" cy="${c}" r="${R}" fill="none" stroke="var(--ink)" stroke-width="2.5"/></svg>`;
+  return `<svg viewBox="0 0 54 54" aria-hidden="true"><defs>${defs}</defs><circle cx="${c}" cy="${c}" r="${R}" fill="${fill}"/><g clip-path="url(#${id})" stroke="var(--seam, #26242e)" stroke-width="2.2">${lines}</g><circle cx="${c}" cy="${c}" r="${R}" fill="none" stroke="var(--seam, #26242e)" stroke-width="2.5"/></svg>`;
 }
 
 /* ---------------- tabs ---------------- */
@@ -657,7 +661,7 @@ function viewToday(){
       <div class="stat3"><div><b class="num">${r.items.length}</b><span>exercises</span></div><div><b class="num">${r.contacts}</b><span>jumps</span></div><div><b class="num">~${estMin(r)}</b><span>minutes</span></div></div>
       ${r.changes.length ? `<p class="small">${r.changes.map(esc).join(" · ")}</p>` : ""}
       ${tooSoon ? `<p class="small">You already trained today. Jump workouts work best with a rest day in between.</p>` : ""}
-      <div class="row"><button class="btn ball" style="flex:1" data-act="start" data-i="${ni}">Start workout</button><button class="btn" style="background:rgba(255,255,255,.15);color:#fff" data-act="preview" data-i="${ni}">See exercises</button></div>
+      <div class="row"><button class="btn ball" style="flex:1" data-act="start" data-i="${ni}">Start workout</button><button class="btn" style="background:rgba(0,0,0,.1);color:var(--on-mint)" data-act="preview" data-i="${ni}">See exercises</button></div>
     </section>`;
   }
   const tip = TIPS[(fromIso(t).getDate() + fromIso(t).getMonth()) % TIPS.length];
@@ -881,7 +885,7 @@ function summaryView(){
   const sess = WK.sid === "rec" ? RECOVERY : PLAN[WK.i]; const ni = nextIdx(); const sched = schedule();
   const mins = Math.max(1, Math.round((WK.end - WK.start) / 60000));
   return `<div style="text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;padding-top:20px">${ballIcon("var(--ball)").replace('viewBox="0 0 54 54"', 'viewBox="0 0 54 54" width="96" height="96"')}<span class="eyebrow">${esc(sess.t)} complete</span><h2 class="exname">Nice work${S.name ? ", " + esc(S.name) : ""}!</h2></div>
-  <div class="stat3" style="background:var(--blue);color:#fff;border-radius:14px;padding:10px"><div><b class="num">+${WK.xp}</b><span>XP</span></div><div><b class="num">${WK.contacts || 0}</b><span>jumps</span></div><div><b class="num">${mins}</b><span>minutes</span></div></div>
+  <div class="stat3" style="background:var(--mint);color:var(--on-mint);border-radius:14px;padding:10px"><div><b class="num">+${WK.xp}</b><span>XP</span></div><div><b class="num">${WK.contacts || 0}</b><span>jumps</span></div><div><b class="num">${mins}</b><span>minutes</span></div></div>
   ${WK.newBadges && WK.newBadges.length ? `<section class="card"><h3>New badge${WK.newBadges.length > 1 ? "s" : ""}</h3><div class="badges">${WK.newBadges.map(id => { const b = BADGES.find(x => x.id === id); return `<div class="bdg">${ballIcon("var(--ball)")}<span>${esc(b.n)}</span></div>`; }).join("")}</div></section>` : ""}
   <section class="card"><span class="eyebrow">Now</span><p><b>Recovery fuel within the hour</b> and a full water bottle. Then rest. Your legs get stronger while you recover, not while you train.</p></section>
   ${ni >= 0 ? `<p class="muted" style="text-align:center">Up next: <b>${esc(PLAN[ni].t)}</b>, ${fmtDate(sched[ni])}</p>` : ""}
@@ -895,7 +899,7 @@ function startRest(sec){
 }
 function startHold(sec){
   clearInterval(holdTimer); const end = Date.now() + sec * 1000; beep(660, .15);
-  const draw = () => { const z = $("#holdzone"); if (!z){ clearInterval(holdTimer); return; } const left = Math.max(0, Math.ceil((end - Date.now()) / 1000)); z.innerHTML = `<div class="restbar" style="background:var(--blue);color:#fff"><div style="flex:1"><span class="small">Hold</span><br><b class="num">${left}</b></div><button class="btn" data-act="stophold">Stop</button></div>`; if (left <= 0){ clearInterval(holdTimer); holdTimer = null; buzz(200); completeSet(); } };
+  const draw = () => { const z = $("#holdzone"); if (!z){ clearInterval(holdTimer); return; } const left = Math.max(0, Math.ceil((end - Date.now()) / 1000)); z.innerHTML = `<div class="restbar" style="background:var(--mint);color:var(--on-mint)"><div style="flex:1"><span class="small">Hold</span><br><b class="num">${left}</b></div><button class="btn" data-act="stophold">Stop</button></div>`; if (left <= 0){ clearInterval(holdTimer); holdTimer = null; buzz(200); completeSet(); } };
   draw(); holdTimer = setInterval(draw, 200);
 }
 function completeSet(){
@@ -1203,7 +1207,7 @@ function showSplash(){
   const s = document.createElement("div");
   s.id = "splash"; s.setAttribute("role", "dialog"); s.setAttribute("aria-label", "Welcome");
   const label = () => customName("intro") ? "Intro song: " + customName("intro") : "Intro: synth fanfare";
-  s.innerHTML = `<button type="button" class="sgo"><div class="sbrand">Above<span>the Net</span></div><div class="scene" aria-hidden="true"><div class="mesh"></div><div class="trail"></div><svg class="burst" viewBox="0 0 120 120" aria-hidden="true"><line x1="82.0" y1="60.0" x2="114.0" y2="60.0" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/><line x1="75.6" y1="75.6" x2="98.2" y2="98.2" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/><line x1="60.0" y1="82.0" x2="60.0" y2="114.0" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/><line x1="44.4" y1="75.6" x2="21.8" y2="98.2" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/><line x1="38.0" y1="60.0" x2="6.0" y2="60.0" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/><line x1="44.4" y1="44.4" x2="21.8" y2="21.8" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/><line x1="60.0" y1="38.0" x2="60.0" y2="6.0" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/><line x1="75.6" y1="44.4" x2="98.2" y2="21.8" stroke="#ffc61a" stroke-width="6" stroke-linecap="round"/></svg><div class="sball">${ballIcon("var(--ball)")}</div></div><div class="prompt">Tap to jump in</div></button>
+  s.innerHTML = `<button type="button" class="sgo"><div class="sbrand">Above<span>the Net</span></div><div class="scene" aria-hidden="true"><div class="mesh"></div><div class="trail"></div><svg class="burst" viewBox="0 0 120 120" aria-hidden="true"><line x1="82.0" y1="60.0" x2="114.0" y2="60.0" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/><line x1="75.6" y1="75.6" x2="98.2" y2="98.2" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/><line x1="60.0" y1="82.0" x2="60.0" y2="114.0" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/><line x1="44.4" y1="75.6" x2="21.8" y2="98.2" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/><line x1="38.0" y1="60.0" x2="6.0" y2="60.0" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/><line x1="44.4" y1="44.4" x2="21.8" y2="21.8" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/><line x1="60.0" y1="38.0" x2="60.0" y2="6.0" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/><line x1="75.6" y1="44.4" x2="98.2" y2="21.8" stroke="#f0a8d6" stroke-width="6" stroke-linecap="round"/></svg><div class="sball">${ballIcon("var(--ball)")}</div></div><div class="prompt">Tap to jump in</div></button>
   <div class="spick"><span class="small" id="songname"></span><div class="row" style="justify-content:center"><span data-s="pickwrap"></span><button type="button" class="spickbtn" data-s="synth" hidden>Use synth</button></div></div>`;
   document.body.appendChild(s);
   const sync = () => { s.querySelector("#songname").textContent = label(); s.querySelector('[data-s="pickwrap"]').innerHTML = fileLabel("intro", customName("intro") ? "Change song" : "Pick a song", "spickbtn"); s.querySelector('[data-s="synth"]').hidden = !customName("intro"); };
