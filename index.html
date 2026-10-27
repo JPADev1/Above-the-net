@@ -116,6 +116,12 @@ p{margin:0}
 .toggle .box{width:26px;height:26px;border-radius:8px;border:2px solid var(--ink-2);flex:none;display:grid;place-items:center}
 .toggle.on .box{background:var(--good);border-color:var(--good)}
 .toggle.on .box::after{content:"";width:8px;height:14px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-2px)}
+.gear{display:flex;flex-direction:column;gap:8px}
+.gearrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:0;text-align:left;width:100%;color:var(--ink);font:inherit}
+.gearrow .box{width:26px;height:26px;border-radius:8px;border:2px solid var(--ink-2);flex:none;display:grid;place-items:center}
+.gearrow[aria-pressed="true"] .box{background:var(--good);border-color:var(--good)}
+.gearrow[aria-pressed="true"] .box::after{content:"";width:8px;height:14px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-2px)}
+.gearrow[aria-pressed="true"] b{text-decoration:line-through;opacity:.6}
 
 /* tabs */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
@@ -505,6 +511,40 @@ function suggestWeight(id){
   if (nw > log.wk && r !== "hard") lb += 2.5;
   return snapDb(Math.max(5, lb));
 }
+/* ---------------- equipment for a session ---------------- */
+// Returns [{k, n, d}] — key, name, detail — in station-setup order.
+function gearFor(sess, r){
+  const ids = r.items.map(it => it.id).concat(sess.nowarm ? [] : WARM.map(w => w[0]));
+  const has = p => ids.some(id => (EX[id].props || []).includes(p));
+  const uses = (...xs) => r.items.some(it => xs.includes(it.id));
+  const g = [];
+  // dumbbells: how many of each weight are needed at once
+  const need = {}, who = {};
+  r.items.forEach(it => { const ex = EX[it.id]; if (!ex.db || !it.weight) return;
+    const c = ex.db === "2" ? 2 : 1; need[it.weight] = Math.max(need[it.weight] || 0, c);
+    (who[it.weight] = who[it.weight] || []).push(ex.n); });
+  const ws = Object.keys(need).map(Number).sort((a,b) => b - a);
+  if (ws.length) g.push({k:"db", n:"Dumbbells", d: ws.map(w => `${w} lb${need[w] > 1 ? " ×2" : ""} (${who[w].join(", ")})`).join(" · ")});
+  // boxes: every height used today
+  const hs = new Set(); r.items.forEach(it => { if (it.box) hs.add(it.box); }); if (uses("rfess")) hs.add(16);
+  if (hs.size) g.push({k:"box", n:"Plyo box", d:[...hs].sort((a,b) => a - b).map(h => h + '"').join(" + ") + (hs.size > 1 ? " (swap heights between exercises)" : "")});
+  if (has("slantT") || has("slantH")) g.push({k:"slant", n:"Slant board", d:""});
+  if (has("kneeband")) g.push({k:"loop", n:"Loop band", d:"around the knees" + (sess.nowarm ? "" : ", warm-up too")});
+  if (has("pallof")) g.push({k:"band", n:"Long band + door anchor", d:"anchored at chest height"});
+  if (uses("plank","deadbug","bridge")) g.push({k:"mat", n:"Mat or towel", d:"for floor work"});
+  if (has("wall")) g.push({k:"wall", n:"Wall + chalk or tape", d:"plus a tape measure for the jump test"});
+  if (has("hill")) g.push({k:"hill", n:"The hill", d:"part of today is outside. Wear shoes with grip"});
+  g.push({k:"water", n:"Water bottle", d:"keep it within reach"});
+  return g;
+}
+function gearList(sess, r){
+  const g = gearFor(sess, r);
+  return `<div class="gear"><span class="eyebrow">Set up your station</span><div class="xlist">${g.map(x => `<button class="gearrow" data-act="gear" aria-pressed="false"><span class="box"></span><span><b>${esc(x.n)}</b>${x.d ? `<br><span class="small muted">${esc(x.d)}</span>` : ""}</span></button>`).join("")}</div><p class="small muted">Tap each one as you set it out.</p></div>`;
+}
+function gearChips(sess, r){
+  return gearFor(sess, r).filter(x => x.k !== "water").map(x => `<span class="chip" style="background:rgba(0,0,0,.1);color:var(--on-mint)">${esc(x.n)}</span>`).join("");
+}
+
 function bestVert(){ return S.tests.reduce((m,t) => Math.max(m, t.vert), 0); }
 function baseVert(){ return S.tests.length ? S.tests[0].vert : null; }
 
@@ -659,6 +699,7 @@ function viewToday(){
       <div class="row between"><span class="eyebrow">Week ${s.wk} · ${wk.name}</span><span class="small muted">${fmtDate(sched[ni])}</span></div>
       <h2>${esc(s.t)}</h2>
       <div class="stat3"><div><b class="num">${r.items.length}</b><span>exercises</span></div><div><b class="num">${r.contacts}</b><span>jumps</span></div><div><b class="num">~${estMin(r)}</b><span>minutes</span></div></div>
+      <div><span class="small" style="font-weight:700;opacity:.8">Gear to set out</span><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${gearChips(s, r)}</div></div>
       ${r.changes.length ? `<p class="small">${r.changes.map(esc).join(" · ")}</p>` : ""}
       ${tooSoon ? `<p class="small">You already trained today. Jump workouts work best with a rest day in between.</p>` : ""}
       <div class="row"><button class="btn ball" style="flex:1" data-act="start" data-i="${ni}">Start workout</button><button class="btn" style="background:rgba(0,0,0,.1);color:var(--on-mint)" data-act="preview" data-i="${ni}">See exercises</button></div>
@@ -793,6 +834,8 @@ function openPreview(i){
     ${sess.note ? `<p class="notice blue small">${esc(sess.note)}</p>` : ""}
     ${r.changes.length ? `<p class="notice small">${r.changes.map(esc).join("<br>")}</p>` : ""}
     <div class="row"><span class="chip blue num">${r.contacts} jumps</span><span class="chip num">~${estMin(r)} min</span>${d ? `<span class="chip good">Done ${fmtDate(d.date)}</span>` : ""}</div>
+    ${gearList(sess, r)}
+    <span class="eyebrow">Exercises</span>
     <div class="xlist">${sess.nowarm ? "" : `<div class="xrow"><div class="thumb">${staticFig("skip")}</div><div class="t"><b>Warm-up</b><div class="small muted">Jog + skips, leg swings, band walks, inchworms, lunge stretch · 6 min</div></div></div>`}
     ${r.items.map(it => { const ex = EX[it.id]; return `<div class="xrow"><div class="thumb">${staticFig(it.id, it.box)}</div><div class="t"><b>${esc(ex.n)}</b><div class="small muted">${rxText(it)}${it.box ? ` · ${it.box}" box` : ""}${it.weight ? ` · ${it.weight} lb${ex.db === "2" ? " each" : ""}` : ""}</div></div>${ytLink(it.id, true)}</div>`; }).join("")}</div>
     <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px"><button class="btn primary block" data-act="go" data-i="${i}">${d ? "Do it again" : "Start workout"}</button></div>
@@ -1013,6 +1056,7 @@ document.addEventListener("click", e => {
     case "preview": openPreview(b.dataset.i === "rec" ? "rec" : +b.dataset.i); break;
     case "start": case "go": startWorkout(b.dataset.i === "rec" ? "rec" : +b.dataset.i); break;
     case "close": $("#ov").innerHTML = ""; break;
+    case "gear": b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true"); break;
     case "water": { const h = S.habits[t] = S.habits[t] || {water:0,fuel:false,sleep:false}; const n = +b.dataset.n; const was = h.water; h.water = h.water === n ? n - 1 : n; if (h.water > was) addXp(5 * (h.water - was)); if (h.water === S.settings.bottles && was < h.water) toast("Water goal hit!"); checkHabitBadges(); save(); render(); break; }
     case "habit": { const h = S.habits[t] = S.habits[t] || {water:0,fuel:false,sleep:false}; const k = b.dataset.k; h[k] = !h[k]; if (h[k]) addXp(15); checkHabitBadges(); save(); render(); break; }
     case "day": { const d = +b.dataset.d; const ds = S.settings.days; S.settings.days = ds.includes(d) ? ds.filter(x => x !== d) : ds.concat(d).sort(); if (!S.settings.days.length) S.settings.days = [d]; save(); render(); break; }
