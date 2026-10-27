@@ -116,6 +116,7 @@ p{margin:0}
 .toggle .box{width:26px;height:26px;border-radius:8px;border:2px solid var(--ink-2);flex:none;display:grid;place-items:center}
 .toggle.on .box{background:var(--good);border-color:var(--good)}
 .toggle.on .box::after{content:"";width:8px;height:14px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-2px)}
+.spotbtn{display:flex;align-items:center;justify-content:center;gap:8px}
 .gear{display:flex;flex-direction:column;gap:8px}
 .gearrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:0;text-align:left;width:100%;color:var(--ink);font:inherit}
 .gearrow .box{width:26px;height:26px;border-radius:8px;border:2px solid var(--ink-2);flex:none;display:grid;place-items:center}
@@ -334,7 +335,7 @@ const boxTop = h => 186 - ih(h);
 /* ---------------- exercise library ---------------- */
 // t: warm|plyo|str|hold|hill|test ; side: per side ; w0: starting dumbbell lb ; db: '2' both hands, 'g' goblet, '1' one hand
 const EX = {
-  skip:{yt:"A skip warm up drill",n:"Jog + Skips",t:"warm",u:"sec",c:["Easy jog around the yard for a minute","Then skips: big arm swing, light and bouncy"],f:()=>[[RUN],[mv(RUN2,16,0)]],props:[]},
+  skip:{yt:"A skip warm up drill",n:"Jog + Skips",t:"warm",u:"sec",cues:[[0,"Easy jog"],[60,"Skips"]],c:["Easy jog around the yard for a minute","Then skips: big arm swing, light and bouncy"],f:()=>[[RUN],[mv(RUN2,16,0)]],props:[]},
   legsw:{yt:"leg swings dynamic warm up",n:"Leg Swings",t:"warm",side:1,c:["Hold a wall or post","Swing one leg front to back, relaxed","Then side to side"],f:()=>[[W(ST,{k2:[140,138],a2:[164,164],e1:[140,72],w1:[158,66]})],[W(ST,{k2:[102,144],a2:[80,170],e1:[140,72],w1:[158,66]})]]},
   bandwalk:{yt:"banded lateral walk proper form",n:"Band Lateral Walk",t:"warm",side:1,eq:"band",c:["Band around your knees, half squat","Step sideways with toes pointing forward","Keep the band tight the whole time"],f:()=>[[QTR],[mv(W(QTR,{k2:[120,150],a2:[104,184]}),14,0)]],props:["kneeband"]},
   inch:{yt:"inchworm exercise how to",n:"Inchworm",t:"warm",feet:0,c:["Fold over and put hands on the ground","Walk hands out to a push-up position","Walk feet up to your hands and stand"],f:()=>[[ST],[FOLD],[PUSH]]},
@@ -811,6 +812,11 @@ function viewMe(){
     <details><summary class="small">How to add it on a Pixel</summary><ol class="small" style="padding-left:20px;margin:8px 0 0;display:flex;flex-direction:column;gap:4px"><li>Tap the button and save the file.</li><li>Easiest way: on a computer, open calendar.google.com → Settings → Import & export → Import, and pick the file. Use the Google account that's on the Pixel.</li><li>The reminders show up on the phone within a minute.</li><li>Changed your days or time? Delete the old "Above the Net" events and import a fresh file.</li></ol></details>
   </section>
   ${soundsCard()}
+  <section class="card"><h3>Workout music</h3><p class="small">The Spotify button in every workout opens the Spotify app. Paste a playlist link here and it opens straight to that playlist instead.</p>
+    <div class="field"><label for="sp_url">Spotify playlist link (optional)</label><input id="sp_url" inputmode="url" placeholder="https://open.spotify.com/playlist/…" value="${esc(s.spotify || "")}"></div>
+    <p class="small muted">In Spotify: open the playlist → ⋮ → Share → Copy link.</p>
+    <button class="btn ghost spotbtn" data-act="spotify">${SPOT_ICON}<span>Test it</span></button>
+  </section>
   <section class="card"><h3>Backup</h3><p class="small muted">Your progress is saved in this browser on this phone. Make a backup if you switch phones or clear your browser.</p>
     <div class="row"><button class="btn ghost" data-act="backup">Save backup file</button><button class="btn ghost" data-act="copy">Copy backup code</button></div>
     <div class="field"><label for="rs">Restore from backup code</label><textarea id="rs" rows="3" placeholder="Paste a backup code here"></textarea></div><button class="btn ghost" data-act="restore">Restore</button>
@@ -855,9 +861,9 @@ function startWorkout(i){
 function warmCur(){ const c = WK && WK.warmCur; if (c != null && c >= 0 && c < WARM.length) return c; const f = WARM.findIndex((_,i) => !WK.warm[i]); return f >= 0 ? f : WARM.length - 1; }
 function saveWip(){ try { localStorage.setItem(LSW, JSON.stringify(WK)); } catch(e){} }
 function clearWip(){ try { localStorage.removeItem(LSW); } catch(e){} }
-function exitWorkout(){ stopAnim(); clearInterval(restTimer); clearInterval(holdTimer); restTimer = holdTimer = null; WK = null; clearWip(); try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null; $("#ov").innerHTML = ""; render(); }
+function exitWorkout(){ ttStop(); stopAnim(); clearInterval(restTimer); clearInterval(holdTimer); restTimer = holdTimer = null; WK = null; clearWip(); try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null; $("#ov").innerHTML = ""; render(); }
 function progressPct(){ const tot = WK.items.reduce((a,it) => a + it.sets, 0) + 1; const dn = WK.sets.reduce((a,b) => a + b, 0) + (WK.idx >= 0 ? 1 : 0); return Math.min(100, Math.round(dn / tot * 100)); }
-function wHead(){ return `<div class="wtop"><button class="iconbtn" data-act="quit" aria-label="Leave workout"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="bar"><i style="width:${progressPct()}%"></i></div><span class="chip num">${WK.xp} XP</span></div><div id="quitzone"></div>`; }
+function wHead(){ return `<div class="wtop"><button class="iconbtn" data-act="quit" aria-label="Leave workout"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="bar"><i style="width:${progressPct()}%"></i></div><button class="iconbtn" data-act="spotify" aria-label="Open Spotify">${SPOT_ICON}</button><span class="chip num">${WK.xp} XP</span></div><div id="quitzone"></div>`; }
 function drawWorkout(){
   stopAnim();
   const n = WK.items.length;
@@ -866,6 +872,8 @@ function drawWorkout(){
     const cur = warmCur(), cid = WARM[cur][0], allDone = WARM.every((_,k) => WK.warm[k]);
     body = `<div><span class="eyebrow">Warm-up · about 6 minutes</span><h2 class="exname">${allDone ? "Warmed up" : esc(EX[cid].n)}</h2><p class="muted">${allDone ? "All five done. Time to jump." : esc(EX[cid].c[0])}</p></div>
     <div class="stage"><svg viewBox="0 -24 240 214" id="fig" aria-hidden="true"></svg></div>
+    ${TT && TT.key[0] === "w" ? ttZone(TT.key) : (!allDone && EX[cid].u === "sec" && !WK.warm[cur] ? ttStartBtn("w" + cur, cid, WARM[cur][2]) : "")}
+    <button class="btn ghost block spotbtn" data-act="spotify">${SPOT_ICON}<span>${spotifyLink() ? "Play my workout playlist" : "Open Spotify"}</span></button>
     <div class="xlist">${WARM.map(([id,,reps],k) => `<div class="wrow ${WK.warm[k] ? "done" : ""} ${k === cur && !allDone ? "cur" : ""}">
       <button class="wchk" data-act="warmchk" data-k="${k}" aria-label="${WK.warm[k] ? "Mark not done" : "Mark done"}: ${esc(EX[id].n)}"><span class="box"></span></button>
       <button class="wsel" data-act="warmsel" data-k="${k}"><b>${esc(EX[id].n)}</b><span class="small muted">${rxText({id,reps,sets:1})}</span></button>
@@ -885,7 +893,8 @@ function drawWorkout(){
       <button class="btn primary block" data-act="savetest">Save test</button>
       <button class="btn ghost block" data-act="skipex">Skip the test today</button>`;
     } else if (ex.t === "warm"){
-      ctrl = done ? `<button class="btn ball block" data-act="next">${WK.idx === n - 1 ? "Finish" : "Next exercise"}</button>` : `<button class="btn primary block" data-act="setdone">Done</button>`;
+      const key = "i" + WK.idx, timed = ex.u === "sec" && !done;
+      ctrl = done ? `<button class="btn ball block" data-act="next">${WK.idx === n - 1 ? "Finish" : "Next exercise"}</button>` : `${timed ? (TT && TT.key === key ? ttZone(key) : ttStartBtn(key, it.id, it.reps)) : ""}<button class="btn ${timed ? "ghost" : "primary"} block" data-act="setdone">Done</button>`;
     } else {
       const total = ex.t === "hill" ? 1 : it.sets;
       const bubbles = Array.from({length: total}, (_,k) => `<button class="setb ${k < done ? "done" : k === done ? "cur" : ""}" data-act="${ex.t === "hold" ? "hold" : "setdone"}" aria-label="Set ${k+1}${k < done ? " done" : ""}">${k < done ? "✓" : k + 1}</button>`).join("");
@@ -913,6 +922,7 @@ function drawWorkout(){
   const fig = $("#fig");
   if (fig){ const id = WK.idx === -1 ? WARM[warmCur()][0] : WK.items[WK.idx].id; startAnim(fig, id, WK.idx >= 0 ? WK.items[WK.idx].box : 16); }
   if (WK.idx >= 0 && WK.idx < n && EX[WK.items[WK.idx].id].t === "test") updateTestOut();
+  if (TT) ttTick();
 }
 function feedbackView(){
   const opts = [["hard","😮‍💨","Too hard","Next workout gets a little easier"],["right","👍","Just right","Keep the plan as is"],["more","🔥","I have more in the tank","Next workout adds reps, box height or weight"]];
@@ -940,6 +950,50 @@ function startRest(sec){
   const draw = () => { const z = zone(); if (!z) { clearInterval(restTimer); return; } const left = Math.max(0, Math.ceil((end - Date.now()) / 1000)); z.innerHTML = `<div class="restbar"><div style="flex:1"><span class="small">Rest</span><br><b class="num">${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}</b></div><button class="btn" data-act="skiprest">Skip</button></div>`; if (left <= 0){ clearInterval(restTimer); restTimer = null; z.innerHTML = ""; playSlot("rest"); buzz([120,80,120]); } };
   draw(); restTimer = setInterval(draw, 250);
 }
+/* timed warm-up items (u:"sec"): countdown with phase cues, keeps running across redraws */
+let TT = null, ttTimer = null;
+function ttZone(key){ return `<div id="timezone" data-key="${key}"></div>`; }
+function ttStartBtn(key, id, sec){
+  if (TT && TT.key === key) return "";
+  const ex = EX[id], first = ex.cues ? ex.cues[0][1] : "the timer";
+  return `<button class="btn ball block" data-act="ttstart" data-key="${key}" data-id="${id}" data-sec="${sec}">Start ${esc(first.toLowerCase())} · ${Math.round(sec/60)} min timer</button>`;
+}
+function ttLeft(){ return TT.paused != null ? TT.paused : Math.max(0, Math.ceil((TT.end - Date.now()) / 1000)); }
+function ttPhase(el){ const c = EX[TT.id].cues; if (!c) return "Go"; let p = c[0][1]; c.forEach(([at, l]) => { if (el >= at) p = l; }); return p; }
+function ttStart(key, id, sec){
+  clearInterval(ttTimer); TT = {key, id, total: sec, end: Date.now() + sec * 1000, paused: null, lastPhase: null};
+  beep(660, .15); buzz(80); ttTimer = setInterval(ttTick, 250); ttTick();
+}
+function ttTick(){
+  if (!TT || !WK){ clearInterval(ttTimer); ttTimer = null; TT = null; return; }
+  const left = ttLeft(), ph = ttPhase(TT.total - left);
+  if (TT.lastPhase && ph !== TT.lastPhase){ beep(880, .2); buzz([150,80,150]); toast("Switch: " + ph); }
+  TT.lastPhase = ph;
+  const z = $("#timezone"); if (z && z.dataset.key === TT.key){
+    z.innerHTML = `<div class="restbar" style="background:var(--mint);color:var(--on-mint)"><div style="flex:1;min-width:0"><span class="small"><b>${esc(ph)}</b></span><br><b class="num">${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}</b></div><button class="btn" data-act="ttpause">${TT.paused != null ? "Resume" : "Pause"}</button><button class="btn" data-act="ttdone">Done</button></div>`;
+  }
+  if (left <= 0 && TT.paused == null) ttFinish();
+}
+function ttFinish(){
+  const key = TT.key; clearInterval(ttTimer); ttTimer = null; TT = null; buzz([200,100,200]);
+  if (key[0] === "w"){ const k = +key.slice(1);
+    if (!WK.warm[k]){ WK.warm[k] = true; WK.xp += 5; playSlot("set"); const nx = WARM.findIndex((_,i) => i > k && !WK.warm[i]); WK.warmCur = nx >= 0 ? nx : WARM.findIndex((_,i) => !WK.warm[i]); }
+    saveWip(); drawWorkout();
+  } else if (WK.idx === +key.slice(1)) completeSet();
+}
+function ttStop(){ clearInterval(ttTimer); ttTimer = null; TT = null; }
+
+/* Spotify launcher */
+function spotifyLink(){ const u = (S.settings.spotify || "").trim(); return /^https:\/\/open\.spotify\.com\//.test(u) ? u : ""; }
+function openSpotify(){
+  try { stopMusic(); } catch(e){}
+  const pl = spotifyLink(), android = /Android/i.test(navigator.userAgent);
+  if (pl){ window.open(pl, "_blank"); return; }
+  if (android){ location.href = "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.spotify.music;S.browser_fallback_url=" + encodeURIComponent("https://open.spotify.com/") + ";end"; return; }
+  window.open("https://open.spotify.com/", "_blank");
+}
+const SPOT_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1DB954"/><path d="M6.5 9.2c3.8-1.1 8-.8 11.2 1.1M7.2 12.4c3.1-.9 6.5-.6 9.2.9M7.9 15.4c2.5-.7 5.1-.5 7.3.7" stroke="#000" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>`;
+
 function startHold(sec){
   clearInterval(holdTimer); const end = Date.now() + sec * 1000; beep(660, .15);
   const draw = () => { const z = $("#holdzone"); if (!z){ clearInterval(holdTimer); return; } const left = Math.max(0, Math.ceil((end - Date.now()) / 1000)); z.innerHTML = `<div class="restbar" style="background:var(--mint);color:var(--on-mint)"><div style="flex:1"><span class="small">Hold</span><br><b class="num">${left}</b></div><button class="btn" data-act="stophold">Stop</button></div>`; if (left <= 0){ clearInterval(holdTimer); holdTimer = null; buzz(200); completeSet(); } };
@@ -1078,16 +1132,20 @@ document.addEventListener("click", e => {
     case "reset2": { stopMusic(); SLOTS.forEach(([k]) => { if (customName(k)) clearAudio(k); }); S = defaults(); save(); try { localStorage.removeItem(LSW); } catch(err){} render(); openProfile(true); toast("Started over"); break; }
     case "test": startWorkout("test"); break;
     /* workout */
-    case "warmchk": { const k = +b.dataset.k; WK.warm[k] = !WK.warm[k];
+    case "ttstart": ttStart(b.dataset.key, b.dataset.id, +b.dataset.sec); drawWorkout(); break;
+    case "ttpause": if (TT){ if (TT.paused != null){ TT.end = Date.now() + TT.paused * 1000; TT.paused = null; } else TT.paused = ttLeft(); ttTick(); } break;
+    case "ttdone": if (TT) ttFinish(); break;
+    case "spotify": openSpotify(); break;
+    case "warmchk": { const k = +b.dataset.k; if (TT && TT.key === "w" + k) ttStop(); WK.warm[k] = !WK.warm[k];
       if (WK.warm[k]){ WK.xp += 5; playSlot("set"); const nx = WARM.findIndex((_,i) => i > k && !WK.warm[i]); WK.warmCur = nx >= 0 ? nx : WARM.findIndex((_,i) => !WK.warm[i]); }
       else WK.warmCur = k;
       saveWip(); drawWorkout(); break; }
     case "warmsel": WK.warmCur = +b.dataset.k; saveWip(); drawWorkout(); break;
-    case "setdone": completeSet(); break;
+    case "setdone": if (TT && TT.key === "i" + WK.idx) ttStop(); completeSet(); break;
     case "hold": if (!holdTimer && WK.sets[WK.idx] < WK.items[WK.idx].sets){ clearInterval(restTimer); restTimer = null; const z = $("#restzone"); if (z) z.innerHTML = ""; startHold(WK.items[WK.idx].reps); } break;
     case "stophold": clearInterval(holdTimer); holdTimer = null; completeSet(); break;
     case "skiprest": clearInterval(restTimer); restTimer = null; $("#restzone").innerHTML = ""; break;
-    case "next": case "skipex": clearInterval(restTimer); restTimer = null; clearInterval(holdTimer); holdTimer = null; WK.idx++; saveWip(); drawWorkout(); $("#ov .overlay").scrollTo(0,0); break;
+    case "next": case "skipex": if (TT) ttStop(); clearInterval(restTimer); restTimer = null; clearInterval(holdTimer); holdTimer = null; WK.idx++; saveWip(); drawWorkout(); $("#ov .overlay").scrollTo(0,0); break;
     case "wup": case "wdn": { const k = WK.idx, cur = WK.weights[k] || EX[WK.items[k].id].w0; const i = DB_STEPS.indexOf(snapDb(cur)); WK.weights[k] = DB_STEPS[Math.max(0, Math.min(DB_STEPS.length - 1, i + (a === "wup" ? 1 : -1)))]; saveWip(); const o = b.parentElement.querySelector("output"); if (o) o.innerHTML = WK.weights[k] + '<span style="font-size:16px"> lb</span>'; break; }
     case "savetest": if (saveTest()){ WK.sets[WK.idx] = 1; WK.xp += 50; if (WK.sid === "test"){ exitWorkout(); TAB = "progress"; render(); toast("Jump test saved"); } else { WK.idx++; saveWip(); drawWorkout(); } } break;
     case "rate": WK.rating = b.dataset.k; drawWorkout(); break;
@@ -1106,6 +1164,7 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   if (e.target.id === "tm"){ S.settings.time = e.target.value || "16:30"; save(); }
   if (e.target.id === "bt"){ S.settings.bottles = +e.target.value; save(); }
+  if (e.target.id === "sp_url"){ const v = e.target.value.trim().split("?")[0]; if (!v || /^https:\/\/open\.spotify\.com\//.test(v)){ S.settings.spotify = v; save(); toast(v ? "Playlist saved" : "Playlist cleared"); } else toast("That doesn't look like a Spotify link"); }
   if (e.target.id === "st_target" && isoOk(e.target.value)){ S.settings.target = e.target.value; save(); render(); toast("First practice: " + fmtLong(target())); }
   if (e.target.id === "st_start" && isoOk(e.target.value)){ S.settings.start = e.target.value; save(); render(); toast("Plan starts " + fmtLong(planStart())); }
   if (e.target.matches && e.target.matches("#app input[data-slot]")){ const k = e.target.dataset.slot; saveAudioFile(k, e.target.files && e.target.files[0], () => { render(); toast("Sound saved"); }); }
