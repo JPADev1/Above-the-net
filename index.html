@@ -1242,7 +1242,7 @@ function fuelCard(){
 function profileForm(p){
   p = p || {}; const h = p.hIn || 64, ft = Math.floor(h / 12), inch = Math.round(h % 12);
   return `<div class="field"><label for="pf_name">First name</label><input id="pf_name" value="${esc(S.name || "")}" autocomplete="off"></div>
-  <div class="grid2"><div class="field"><label for="pf_age">Age</label><input id="pf_age" type="number" inputmode="numeric" min="8" max="25" value="${p.age || ""}"></div><div class="field"><label for="pf_w">Weight (lb)</label><input id="pf_w" type="number" inputmode="decimal" min="50" max="300" value="${p.wLb || ""}"></div></div>
+  <div class="grid2"><div class="field"><label for="pf_age">Age</label><input id="pf_age" type="number" inputmode="numeric" min="8" max="88" value="${p.age || ""}"></div><div class="field"><label for="pf_w">Weight (lb)</label><input id="pf_w" type="number" inputmode="decimal" min="50" max="300" value="${p.wLb || ""}"></div></div>
   <div class="field"><label for="pf_ft">Height</label><div class="grid2"><select id="pf_ft" aria-label="Feet">${[4,5,6,7].map(v => `<option value="${v}" ${v === ft ? "selected" : ""}>${v} ft</option>`).join("")}</select><select id="pf_in" aria-label="Inches">${Array.from({length:12}, (_,i) => `<option value="${i}" ${i === inch ? "selected" : ""}>${i} in</option>`).join("")}</select></div></div>
   <div class="field"><label for="pf_reach">Standing reach (inches)</label><input id="pf_reach" inputmode="decimal" value="${p.reach || ""}" placeholder="e.g. 85 or 7'1"><span class="small muted">Stand flat-footed next to a wall, reach one arm straight up, and measure from the floor to your fingertips.</span><button type="button" class="btn ghost small" data-act="estreach">Estimate it from my height</button></div>
   <div class="field"><label for="pf_target">First club practice</label><input id="pf_target" type="date" value="${target()}"><span class="small muted">The countdown, plan dates and reminders all build toward this day.</span></div>
@@ -1252,7 +1252,7 @@ function readProfile(){
   const v = id => ($("#" + id) || {}).value;
   const name = (v("pf_name") || "").trim().slice(0, 20), age = parseInt(v("pf_age"), 10), wLb = parseFloat(v("pf_w"));
   const hIn = parseInt(v("pf_ft"), 10) * 12 + parseInt(v("pf_in"), 10), reach = parseIn(v("pf_reach"));
-  if (!(age >= 8 && age <= 25)) return {err: "Enter an age between 8 and 25."};
+  if (!(age >= 8 && age <= 88)) return {err: "Enter an age between 8 and 88."};
   if (!(wLb >= 50 && wLb <= 300)) return {err: "Enter weight in pounds (50 to 300)."};
   if (!(hIn >= 48 && hIn <= 90)) return {err: "Check the height."};
   if (!(reach >= 55 && reach <= 115)) return {err: "Enter standing reach in inches, like 85 or 7'1."};
