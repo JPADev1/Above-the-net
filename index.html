@@ -918,7 +918,10 @@ function drawWorkout(){
   } else {
     body = summaryView();
   }
-  $("#ov").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-label="Workout"><div class="inner">${WK.idx <= n ? wHead() : ""}${body}</div></div>`;
+  /* keep the scroll position when redrawing the same step (checking off a set or warm-up item) */
+  const prevOv = $("#ov .overlay[data-wstep]"), keepY = prevOv && prevOv.dataset.wstep === String(WK.idx) ? prevOv.scrollTop : 0;
+  $("#ov").innerHTML = `<div class="overlay" role="dialog" aria-modal="true" aria-label="Workout" data-wstep="${WK.idx}"><div class="inner">${WK.idx <= n ? wHead() : ""}${body}</div></div>`;
+  if (keepY){ const ov = $("#ov .overlay"); if (ov) ov.scrollTop = keepY; }
   const fig = $("#fig");
   if (fig){ const id = WK.idx === -1 ? WARM[warmCur()][0] : WK.items[WK.idx].id; startAnim(fig, id, WK.idx >= 0 ? WK.items[WK.idx].box : 16); }
   if (WK.idx >= 0 && WK.idx < n && EX[WK.items[WK.idx].id].t === "test") updateTestOut();
