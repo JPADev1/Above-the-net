@@ -861,7 +861,7 @@ function startWorkout(i){
 function warmCur(){ const c = WK && WK.warmCur; if (c != null && c >= 0 && c < WARM.length) return c; const f = WARM.findIndex((_,i) => !WK.warm[i]); return f >= 0 ? f : WARM.length - 1; }
 function saveWip(){ try { localStorage.setItem(LSW, JSON.stringify(WK)); } catch(e){} }
 function clearWip(){ try { localStorage.removeItem(LSW); } catch(e){} }
-function exitWorkout(){ ttStop(); stopAnim(); clearInterval(restTimer); clearInterval(holdTimer); restTimer = holdTimer = null; WK = null; clearWip(); try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null; $("#ov").innerHTML = ""; render(); }
+function exitWorkout(){ ttStop(); stopAnim(); clearInterval(restTimer); clearInterval(holdTimer); restTimer = holdTimer = null; WK = null; clearWip(); try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null; $("#ov").innerHTML = ""; navClear(); render(); }
 function progressPct(){ const tot = WK.items.reduce((a,it) => a + it.sets, 0) + 1; const dn = WK.sets.reduce((a,b) => a + b, 0) + (WK.idx >= 0 ? 1 : 0); return Math.min(100, Math.round(dn / tot * 100)); }
 function wHead(){ return `<div class="wtop"><button class="iconbtn" data-act="quit" aria-label="Leave workout"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="bar"><i style="width:${progressPct()}%"></i></div><button class="iconbtn" data-act="spotify" aria-label="Open Spotify">${SPOT_ICON}</button><span class="chip num">${WK.xp} XP</span></div><div id="quitzone"></div>`; }
 function drawWorkout(){
@@ -1039,7 +1039,7 @@ function finishWorkout(){
     if (S.fbCount >= 10 && award("honest")) newB.push("honest");
     if (PLAN.every(p => S.done[p.id]) && award("done")) newB.push("done");
   }
-  WK.newBadges = newB; WK.idx = WK.items.length + 1;
+  WK.newBadges = newB; WK.idx = WK.items.length + 1; NAV.length = 0; navPush({t:"wexit"});
   save(); clearWip();
   drawWorkout(); playSlot("done"); confetti();
 }
@@ -1104,35 +1104,85 @@ async function offerFile(filename, data){
   } catch(e){ if (!e || e.code !== "declined") toast("Couldn't save the file. Try again in a moment."); }
 }
 
+/* ---------------- back navigation (swipe right + the phone's back gesture) ---------------- */
+// NAV holds the screens to go back to. One extra browser-history entry ("guard") sits on top
+// while NAV has anything in it, so the phone's back gesture comes here instead of closing the app.
+const NAV = [];
+let skipPop = 0;
+const onGuard = () => !!(history.state && history.state.atn);
+function navPush(entry){ NAV.push(entry); try { if (!onGuard()) history.pushState({atn:1}, ""); } catch(e){} }
+function mainEntry(){ return {t:"main", tab:TAB, y:window.scrollY}; }
+function navClear(){ NAV.length = 0; try { if (onGuard()){ skipPop++; history.back(); } } catch(e){} }
+function closeOverlay(){ if (NAV.length && NAV[NAV.length - 1].t === "main") NAV.pop(); $("#ov").innerHTML = ""; if (!NAV.length) navClear(); }
+function quitPrompt(){ const z = $("#quitzone"); if (!z) return; z.innerHTML = `<div class="notice small" style="margin-top:8px">Leave this workout? Sets you finished won't be saved.</div><div class="row" style="margin-top:8px"><button class="btn" style="background:var(--danger);color:#fff" data-act="quit2">Leave</button><button class="btn ghost" data-act="quit0">Keep going</button></div>`; const ov = $("#ov .overlay"); if (ov) ov.scrollTo(0,0); }
+function doBack(){
+  const e = NAV.pop(); if (!e) return;
+  if (e.t === "main"){ stopAnim(); $("#ov").innerHTML = ""; TAB = e.tab; render(); window.scrollTo(0, e.y || 0); return; }
+  if (e.t === "wexit"){ // first screen of a workout: ask before leaving, or finish up from the summary
+    if (!WK) return;
+    if (WK.idx > WK.items.length){ exitWorkout(); return; }
+    NAV.push(e); quitPrompt(); return;
+  }
+  if (e.t === "wstep"){
+    if (!WK) return;
+    const it = WK.items[e.idx];
+    if (it && EX[it.id].t === "test" && WK.sets[e.idx] >= 1){ doBack(); return; } // a saved jump test can't be redone by going back
+    if (TT) ttStop(); clearInterval(restTimer); clearInterval(holdTimer); restTimer = holdTimer = null;
+    WK.idx = e.idx; saveWip(); drawWorkout(); const ov = $("#ov .overlay"); if (ov) ov.scrollTo(0,0);
+  }
+}
+window.addEventListener("popstate", ev => {
+  const guard = !!(ev.state && ev.state.atn);
+  if (skipPop > 0){ skipPop--; }
+  else if (NAV.length){ doBack(); }
+  else if (guard){ try { history.back(); } catch(e){} return; } // stale guard left over: pass through
+  try { if (NAV.length && !onGuard()) history.pushState({atn:1}, ""); } catch(e){}
+});
+function goBack(){ if (!NAV.length) return false; try { if (onGuard()){ history.back(); return true; } } catch(e){} doBack(); return true; }
+
+/* swipe right anywhere to go back */
+let sw = null;
+document.addEventListener("touchstart", e => {
+  sw = null; if (e.touches.length !== 1 || !NAV.length || $("#splash")) return;
+  const t = e.touches[0], el = e.target;
+  if (el.closest && el.closest("input,textarea,select,.chartbox,.stepper,table")) return;
+  sw = {x: t.clientX, y: t.clientY, at: Date.now()};
+}, {passive: true});
+document.addEventListener("touchend", e => {
+  if (!sw) return; const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = Math.abs(t.clientY - sw.y), ms = Date.now() - sw.at; sw = null;
+  if (dx > 80 && dy < dx * 0.5 && ms < 700) goBack();
+}, {passive: true});
+document.addEventListener("touchcancel", () => { sw = null; }, {passive: true});
+
 /* ---------------- events ---------------- */
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act],[data-tab]"); if (!b) return;
-  if (b.dataset.tab){ TAB = b.dataset.tab; render(); window.scrollTo(0,0); return; }
+  if (b.dataset.tab){ if (b.dataset.tab !== TAB) navPush(mainEntry()); TAB = b.dataset.tab; render(); window.scrollTo(0,0); return; }
   const a = b.dataset.act, t = today();
   switch (a){
-    case "preview": openPreview(b.dataset.i === "rec" ? "rec" : +b.dataset.i); break;
+    case "preview": navPush(mainEntry()); openPreview(b.dataset.i === "rec" ? "rec" : +b.dataset.i); break;
     case "start": case "go": startWorkout(b.dataset.i === "rec" ? "rec" : +b.dataset.i); break;
-    case "close": $("#ov").innerHTML = ""; break;
+    case "close": closeOverlay(); break;
     case "gear": b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true"); break;
     case "water": { const h = S.habits[t] = S.habits[t] || {water:0,fuel:false,sleep:false}; const n = +b.dataset.n; const was = h.water; h.water = h.water === n ? n - 1 : n; if (h.water > was) addXp(5 * (h.water - was)); if (h.water === S.settings.bottles && was < h.water) toast("Water goal hit!"); checkHabitBadges(); save(); render(); break; }
     case "habit": { const h = S.habits[t] = S.habits[t] || {water:0,fuel:false,sleep:false}; const k = b.dataset.k; h[k] = !h[k]; if (h[k]) addXp(15); checkHabitBadges(); save(); render(); break; }
     case "day": { const d = +b.dataset.d; const ds = S.settings.days; S.settings.days = ds.includes(d) ? ds.filter(x => x !== d) : ds.concat(d).sort(); if (!S.settings.days.length) S.settings.days = [d]; save(); render(); break; }
     case "set": S.settings[b.dataset.k] = !S.settings[b.dataset.k]; save(); render(); break;
     case "install": if (installPrompt){ installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; render(); }); } break;
-    case "resume": WK = pendingWip; pendingWip = null; drawWorkout(); break;
+    case "resume": WK = pendingWip; pendingWip = null; NAV.length = 0; navPush({t:"wexit"}); drawWorkout(); break;
     case "discardwip": pendingWip = null; clearWip(); render(); break;
     case "testsnd": playSlot(b.dataset.k, true); break;
     case "clrsnd": clearAudio(b.dataset.k).then(render); break;
-    case "profile": openProfile(false); break;
+    case "profile": navPush(mainEntry()); openProfile(false); break;
     case "estreach": { const hIn = parseInt($("#pf_ft").value, 10) * 12 + parseInt($("#pf_in").value, 10); $("#pf_reach").value = Math.round(hIn * 1.33); $("#pf_err").textContent = ""; toast("Estimated. Measure it for real when you can."); break; }
-    case "saveprofile": { const r = readProfile(); if (r.err){ $("#pf_err").textContent = r.err; return; } S.name = r.name; S.profile = r.p; S.settings.target = r.target; if (!isoOk(S.settings.start)) S.settings.start = S.profile.setAt; save(); $("#ov").innerHTML = ""; render(); toast("Profile saved"); break; }
+    case "saveprofile": { const r = readProfile(); if (r.err){ $("#pf_err").textContent = r.err; return; } S.name = r.name; S.profile = r.p; S.settings.target = r.target; if (!isoOk(S.settings.start)) S.settings.start = S.profile.setAt; save(); closeOverlay(); render(); toast("Profile saved"); break; }
     case "ics": offerFile("above-the-net-reminders.ics", icsText()); break;
     case "backup": offerFile("above-the-net-backup.json", JSON.stringify(S)); break;
     case "copy": { const code = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); try { navigator.clipboard.writeText(code).then(() => toast("Backup code copied"), () => { $("#rs").value = code; $("#rs").select(); toast("Code is in the box below. Copy it."); }); } catch(err){ $("#rs").value = code; $("#rs").select(); } break; }
     case "restore": { try { const v = $("#rs").value.trim(); const obj = JSON.parse(v.startsWith("{") ? v : decodeURIComponent(escape(atob(v)))); if (!obj || !obj.settings) throw 0; S = Object.assign(defaults(), obj); save(); toast("Progress restored"); render(); } catch(err){ toast("That code didn't work. Paste the whole thing."); } break; }
     case "reset": $("#resetzone").innerHTML = `<div class="notice small">This erases the player profile, all workouts, tests, XP and chosen songs on this phone.</div><div class="row"><button class="btn" style="background:var(--danger);color:#fff" data-act="reset2">Erase everything</button><button class="btn ghost" data-act="reset0">Keep my progress</button></div>`; break;
     case "reset0": render(); break;
-    case "reset2": { stopMusic(); SLOTS.forEach(([k]) => { if (customName(k)) clearAudio(k); }); S = defaults(); save(); try { localStorage.removeItem(LSW); } catch(err){} render(); openProfile(true); toast("Started over"); break; }
+    case "reset2": { stopMusic(); SLOTS.forEach(([k]) => { if (customName(k)) clearAudio(k); }); S = defaults(); save(); try { localStorage.removeItem(LSW); } catch(err){} navClear(); render(); openProfile(true); toast("Started over"); break; }
     case "test": startWorkout("test"); break;
     /* workout */
     case "ttstart": ttStart(b.dataset.key, b.dataset.id, +b.dataset.sec); drawWorkout(); break;
@@ -1148,14 +1198,14 @@ document.addEventListener("click", e => {
     case "hold": if (!holdTimer && WK.sets[WK.idx] < WK.items[WK.idx].sets){ clearInterval(restTimer); restTimer = null; const z = $("#restzone"); if (z) z.innerHTML = ""; startHold(WK.items[WK.idx].reps); } break;
     case "stophold": clearInterval(holdTimer); holdTimer = null; completeSet(); break;
     case "skiprest": clearInterval(restTimer); restTimer = null; $("#restzone").innerHTML = ""; break;
-    case "next": case "skipex": if (TT) ttStop(); clearInterval(restTimer); restTimer = null; clearInterval(holdTimer); holdTimer = null; WK.idx++; saveWip(); drawWorkout(); $("#ov .overlay").scrollTo(0,0); break;
+    case "next": case "skipex": if (WK.idx < WK.items.length) navPush({t:"wstep", idx:WK.idx}); if (TT) ttStop(); clearInterval(restTimer); restTimer = null; clearInterval(holdTimer); holdTimer = null; WK.idx++; saveWip(); drawWorkout(); $("#ov .overlay").scrollTo(0,0); break;
     case "wup": case "wdn": { const k = WK.idx, cur = WK.weights[k] || EX[WK.items[k].id].w0; const i = DB_STEPS.indexOf(snapDb(cur)); WK.weights[k] = DB_STEPS[Math.max(0, Math.min(DB_STEPS.length - 1, i + (a === "wup" ? 1 : -1)))]; saveWip(); const o = b.parentElement.querySelector("output"); if (o) o.innerHTML = WK.weights[k] + '<span style="font-size:16px"> lb</span>'; break; }
     case "savetest": if (saveTest()){ WK.sets[WK.idx] = 1; WK.xp += 50; if (WK.sid === "test"){ exitWorkout(); TAB = "progress"; render(); toast("Jump test saved"); } else { WK.idx++; saveWip(); drawWorkout(); } } break;
     case "rate": WK.rating = b.dataset.k; drawWorkout(); break;
     case "sore": { const k = b.dataset.k; WK.soreTouched = true; if (k === "Nothing") WK.sore = []; else WK.sore = WK.sore.includes(k) ? WK.sore.filter(x => x !== k) : WK.sore.concat(k); drawWorkout(); break; }
     case "finish": finishWorkout(); break;
     case "exit": exitWorkout(); break;
-    case "quit": $("#quitzone").innerHTML = `<div class="notice small" style="margin-top:8px">Leave this workout? Sets you finished won't be saved.</div><div class="row" style="margin-top:8px"><button class="btn" style="background:var(--danger);color:#fff" data-act="quit2">Leave</button><button class="btn ghost" data-act="quit0">Keep going</button></div>`; break;
+    case "quit": quitPrompt(); break;
     case "quit0": $("#quitzone").innerHTML = ""; break;
     case "quit2": exitWorkout(); break;
   }
@@ -1176,6 +1226,7 @@ document.addEventListener("change", e => {
 /* standalone jump test from Progress */
 const _start = startWorkout;
 startWorkout = function(i){
+  NAV.length = 0; navPush({t:"wexit"});
   if (i === "test"){ WK = {i:"test", sid:"test", t:"Jump Test", wk:0, items:[{id:"jumptest", sets:1, reps:3, rest:0}], idx:0, warm:{}, sets:[0], weights:{}, start:Date.now(), xp:0, test:{}, rating:null, sore:[]}; drawWorkout(); return; }
   _start(i);
 };
